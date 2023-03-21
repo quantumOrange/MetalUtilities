@@ -40,7 +40,7 @@ public actor ComputeTexture<Uniforms:Uniforming> {
     var size:CGSize = CGSize.zero
 
     var target_texture:MTLTexture!
-    
+   
     public init?(commandQueue:MTLCommandQueue, library:MTLLibrary, device:MTLDevice, initialValue:Uniforms, kernalName:String ) async  {
        
         self.library = library
@@ -73,7 +73,6 @@ public actor ComputeTexture<Uniforms:Uniforming> {
         updateDynamicBufferState()
       
         uniforms.pointee = values
-       // uniforms.pointee.time =  Float(CACurrentMediaTime())
     }
     
     var startTime:Double = 0
