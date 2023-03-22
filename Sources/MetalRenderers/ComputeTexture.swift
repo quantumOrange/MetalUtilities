@@ -24,8 +24,12 @@ extension Uniforming {
 
 fileprivate let maxBuffersInFlight = 3
 
-public actor ComputeTexture<Uniforms:Uniforming> {
-
+public actor ComputeTexture<Uniforms> {
+    static var alignedUniformsSize: Int {
+        (MemoryLayout<Uniforms>.size + 0xFF) & -0x100
+    }
+    
+    
     let library:MTLLibrary
     var computePipeline:MTLComputePipelineState!
     let commandQueue: MTLCommandQueue
@@ -37,7 +41,7 @@ public actor ComputeTexture<Uniforms:Uniforming> {
     var uniformBufferIndex = 0
     var uniforms: UnsafeMutablePointer<Uniforms>
     
-    var size:CGSize = CGSize.zero
+    //var size:CGSize = CGSize.zero
 
     var target_texture:MTLTexture!
    
@@ -47,7 +51,7 @@ public actor ComputeTexture<Uniforms:Uniforming> {
        
         self.commandQueue = commandQueue
         
-        let uniformBufferSize = Uniforms.alignedUniformsSize * maxBuffersInFlight
+        let uniformBufferSize = ComputeTexture<Uniforms>.alignedUniformsSize * maxBuffersInFlight
         
         guard let buffer = device.makeBuffer(length:uniformBufferSize, options:[MTLResourceOptions.storageModeShared]) else { return nil }
         uniformBuffer = buffer
@@ -74,27 +78,22 @@ public actor ComputeTexture<Uniforms:Uniforming> {
       
         uniforms.pointee = values
     }
-    
-    var startTime:Double = 0
-    
-    var currentTime:Double {
-        CACurrentMediaTime() - startTime
-    }
-    
+   
     private func updateDynamicBufferState() {
         /// Update the state of our uniform buffers before rendering
         
         uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
-        uniformBufferOffset = Uniforms.alignedUniformsSize * uniformBufferIndex
+        uniformBufferOffset = ComputeTexture<Uniforms>.alignedUniformsSize * uniformBufferIndex
         
         uniforms = UnsafeMutableRawPointer(uniformBuffer.contents() + uniformBufferOffset).bindMemory(to:Uniforms.self, capacity:1)
     }
     
     public func draw(with values:Uniforms, in drawable: CAMetalDrawable? = nil) -> MTLTexture? {
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return nil }
-        
-        let width = Int(size.width)
-        let height = Int(size.height)
+        let width = target_texture.width
+        let height = target_texture.height
+        //let width = Int(size.width)
+        //let height = Int(size.height)
        
         guard width > 0, height > 0 else { return nil }
        
@@ -136,7 +135,7 @@ public actor ComputeTexture<Uniforms:Uniforming> {
     }
     
     public func drawableSizeWillChange(size:CGSize, pixelFormat:MTLPixelFormat, device:MTLDevice) {
-         self.size = size
+        // self.size = size
         
         let width = Int(size.width)
         let height = Int(size.height)
