@@ -41,9 +41,10 @@ public actor ComputeTexture<Uniforms> {
     var uniformBufferIndex = 0
     var uniforms: UnsafeMutablePointer<Uniforms>
     
-    //var size:CGSize = CGSize.zero
 
-    var target_texture:MTLTexture!
+    public var target_texture:MTLTexture!
+    
+    public var input_texture:MTLTexture?
    
     public init?(commandQueue:MTLCommandQueue, library:MTLLibrary, device:MTLDevice, initialValue:Uniforms, kernalName:String ) async  {
        
@@ -111,6 +112,11 @@ public actor ComputeTexture<Uniforms> {
         
         computeEncoder.setBuffer(uniformBuffer, offset: uniformBufferOffset, index: 0)
         computeEncoder.setTexture(target_texture, index: 0)
+        
+        if let input_texture {
+            computeEncoder.setTexture(input_texture, index: 1)
+        }
+        
         computeEncoder.setComputePipelineState(computePipeline)
         computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
         computeEncoder.endEncoding()
