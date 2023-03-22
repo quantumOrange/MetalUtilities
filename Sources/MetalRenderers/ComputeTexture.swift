@@ -45,6 +45,10 @@ public actor ComputeTexture<Uniforms> {
     public var target_texture:MTLTexture!
     
     public var input_texture:MTLTexture?
+    
+    public func setInputTexture(texture:MTLTexture?) {
+        input_texture = texture
+    }
    
     public init?(commandQueue:MTLCommandQueue, library:MTLLibrary, device:MTLDevice, initialValue:Uniforms, kernalName:String ) async  {
        
