@@ -22,7 +22,7 @@ public protocol MetalViewDelegating {
 public struct MUMetalView: UIViewRepresentable  {
     
     public init(delegate:MetalViewDelegating, device:MTLDevice){
-        print("INIT VIEW")
+        //print("INIT VIEW")
         self.actions = delegate
         self.device = device
     }
@@ -35,7 +35,7 @@ public struct MUMetalView: UIViewRepresentable  {
         let mtkView = MTKView(frame: .zero, device: device)
         mtkView.backgroundColor = UIColor.black
         mtkView.delegate = context.coordinator
-        print("configure \(actions)")
+        //print("configure \(actions)")
         actions.configure(view:mtkView)
         return mtkView
     }
@@ -52,14 +52,14 @@ public struct MUMetalView: UIViewRepresentable  {
         
         @MainActor public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
             assert(Thread.isMainThread)
-            print("sizeWillChange \(actions)")
+          //  print("sizeWillChange \(actions)")
             
             actions.sizeWillChange(size: size, view: view)
         }
         
         @MainActor public func draw(in view: MTKView) {
             assert(Thread.isMainThread)
-            print("draw \(actions)")
+           // print("draw \(actions)")
             
             actions.draw(view: view)
         }
