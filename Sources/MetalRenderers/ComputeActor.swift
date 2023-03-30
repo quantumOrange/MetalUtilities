@@ -24,7 +24,7 @@ extension Uniforming {
 
 fileprivate let maxBuffersInFlight = 3
 
-public actor ComputeTexture<Uniforms> {
+public actor ComputeActor<Uniforms> {
     static var alignedUniformsSize: Int {
         (MemoryLayout<Uniforms>.size + 0xFF) & -0x100
     }
@@ -35,6 +35,7 @@ public actor ComputeTexture<Uniforms> {
     let commandQueue: MTLCommandQueue
    
     //let inFlightSemaphore = DispatchSemaphore(value: maxBuffersInFlight)
+    let inFlightSemaphore = DispatchSemaphore(value: 1)
     
     var uniformBuffer: MTLBuffer
     var uniformBufferOffset = 0
@@ -56,7 +57,7 @@ public actor ComputeTexture<Uniforms> {
        
         self.commandQueue = commandQueue
         
-        let uniformBufferSize = ComputeTexture<Uniforms>.alignedUniformsSize * maxBuffersInFlight
+        let uniformBufferSize = ComputeActor<Uniforms>.alignedUniformsSize * maxBuffersInFlight
         
         guard let buffer = device.makeBuffer(length:uniformBufferSize, options:[MTLResourceOptions.storageModeShared]) else { return nil }
         uniformBuffer = buffer
@@ -88,7 +89,7 @@ public actor ComputeTexture<Uniforms> {
         /// Update the state of our uniform buffers before rendering
         
         uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
-        uniformBufferOffset = ComputeTexture<Uniforms>.alignedUniformsSize * uniformBufferIndex
+        uniformBufferOffset = ComputeActor<Uniforms>.alignedUniformsSize * uniformBufferIndex
         
         uniforms = UnsafeMutableRawPointer(uniformBuffer.contents() + uniformBufferOffset).bindMemory(to:Uniforms.self, capacity:1)
     }
@@ -103,7 +104,7 @@ public actor ComputeTexture<Uniforms> {
         guard width > 0, height > 0 else { return nil }
        
         /// Per frame updates hare
-        //_ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
+        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
         
         updateUniforms(values: values)
             
@@ -126,6 +127,7 @@ public actor ComputeTexture<Uniforms> {
         computeEncoder.endEncoding()
         
         if let drawable = drawable {
+            
             let blitEncoder = commandBuffer.makeBlitCommandEncoder()
             blitEncoder?.copy(from:target_texture, to: drawable.texture)
             blitEncoder?.endEncoding()
@@ -135,11 +137,11 @@ public actor ComputeTexture<Uniforms> {
         
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
-        
+        inFlightSemaphore.signal()
         //let duration = commandBuffer.gpuStartTime -  commandBuffer.gpuEndTime
         //print("Compute duration:\(duration)")
     
-        //inFlightSemaphore.signal()
+        //
         
         return target_texture
     }
