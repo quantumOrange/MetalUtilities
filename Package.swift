@@ -2,7 +2,7 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
-
+//git submodule add git@github.com:quantumOrange/MetalUtilities.git
 let package = Package(
     name: "MetalUtilities",
     platforms: [
