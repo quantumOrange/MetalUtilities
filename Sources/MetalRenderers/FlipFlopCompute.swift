@@ -129,24 +129,24 @@ public actor FlipFlopCompute<Uniforms:Uniforming> {
     }
     
     public func drawableSizeWillChange(size:CGSize, pixelFormat:MTLPixelFormat, device:MTLDevice) {
-         self.size = size
+        self.size = size
         
         let width = Int(size.width)
         let height = Int(size.height)
-       
-         guard width > 0, height > 0 else { return }
-         
-         let renderTargetDescriptor = MTLTextureDescriptor()
-      
-         renderTargetDescriptor.pixelFormat = pixelFormat
-         renderTargetDescriptor.textureType =  MTLTextureType.type2D
-         renderTargetDescriptor.mipmapLevelCount = 4
-         renderTargetDescriptor.width = width
-         renderTargetDescriptor.height = height
-         
-         renderTargetDescriptor.usage = [ MTLTextureUsage.shaderRead , MTLTextureUsage.shaderWrite ]
-         
-         target_0 = device.makeTexture(descriptor:renderTargetDescriptor)!
-         target_1 = device.makeTexture(descriptor:renderTargetDescriptor)!
+
+        guard width > 0, height > 0 else { return }
+
+        let renderTargetDescriptor = MTLTextureDescriptor()
+
+        renderTargetDescriptor.pixelFormat = pixelFormat
+        renderTargetDescriptor.textureType =  MTLTextureType.type2D
+        renderTargetDescriptor.mipmapLevelCount = 4
+        renderTargetDescriptor.width = width
+        renderTargetDescriptor.height = height
+
+        renderTargetDescriptor.usage = [ MTLTextureUsage.shaderRead , MTLTextureUsage.shaderWrite ]
+
+        target_0 = device.makeTexture(descriptor:renderTargetDescriptor)!
+        target_1 = device.makeTexture(descriptor:renderTargetDescriptor)!
     }
 }
