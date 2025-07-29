@@ -8,7 +8,7 @@
 import Foundation
 import simd
 import Metal
-import UIKit
+//import UIKit
 import MetalKit
 
 
@@ -21,7 +21,6 @@ extension PassthroughUniforms {
         (MemoryLayout<Self>.size + 0xFF) & -0x100
     }
 }
-
 
 public protocol ViewRendererDelegate: AnyObject  {
     func drawableSizeWillChange(_ size:CGSize)
@@ -138,7 +137,7 @@ public final class ViewRenderer:NSObject,MTKViewDelegate {
             print("view input texture is nil")
             return }
         
-        print("texture \(String(describing: texture.label))")
+       // print("texture \(String(describing: texture.label))")
         if let renderDesciptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable {
             
             if let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor:renderDesciptor ) {
@@ -205,7 +204,7 @@ public final class ViewRenderer:NSObject,MTKViewDelegate {
         //pipelineStateDescriptor.sampleCount = 1
         pipelineStateDescriptor.vertexFunction = vertexFunction
         pipelineStateDescriptor.fragmentFunction = fragmentFunction
-        pipelineStateDescriptor.vertexDescriptor = ImageVertex.vertexDescriptor
+        pipelineStateDescriptor.vertexDescriptor = ImageVertex.vertexDescriptor()
         pipelineStateDescriptor.colorAttachments[0].pixelFormat = pixelFormat
        
         do {

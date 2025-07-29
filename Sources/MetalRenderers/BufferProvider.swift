@@ -14,7 +14,23 @@ public protocol BufferProvider {
     var  buffer:MTLBuffer? { get }
 }
 
-public final class ConstantBuffer<T> : BufferProvider {
+
+
+public protocol VertexBuffer:BufferProvider {
+    var start:Int { get }
+    var count:Int { get }
+    var type:MTLPrimitiveType { get }
+}
+
+
+
+
+public final class ConstantBuffer<T> : VertexBuffer {
+    
+    public let start:Int  = 0
+    public let count:Int
+    public var type:MTLPrimitiveType   = .point
+    
     
     public func update(commandBuffer: any MTLCommandBuffer) -> (offset: Int, buffer: any MTLBuffer)? {
         guard let buffer = self.buffer else { return nil }
@@ -24,7 +40,7 @@ public final class ConstantBuffer<T> : BufferProvider {
     public var buffer: (any MTLBuffer)?
     var lable:String?
     public init(device:MTLDevice,values:[T], lable:String? = nil) throws {
-      
+        count = values.count
         buffer = try buildBuffer(device:device,values: values)
     }
     

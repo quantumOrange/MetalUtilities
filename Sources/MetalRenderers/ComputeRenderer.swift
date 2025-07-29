@@ -70,10 +70,9 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
     
     func updateUniforms() {
         updateDynamicBufferState()
-      
         uniformsPointer.pointee = uniforms
     }
-   
+    
     private func updateDynamicBufferState() {
         /// Update the state of our uniform buffers before rendering
         

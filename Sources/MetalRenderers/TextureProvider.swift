@@ -11,9 +11,40 @@ import Metal
 public protocol TextureProvider {
     func render(commandBuffer:MTLCommandBuffer) -> MTLTexture?
     var target_texture:MTLTexture? { get }
+    
 }
 
+
+
+public enum TextureDestination {
+    case fragmentOnly
+    case all
+    case vertexOnly
+    
+    var fragment:Bool {
+        switch self {
+        case .fragmentOnly, .all:
+            return true
+        case .vertexOnly:
+            return false
+        }
+    }
+    
+    var vertex:Bool {
+        switch self {
+        case .fragmentOnly, .all:
+            return true
+        case .vertexOnly:
+            return false
+        }
+    }
+}
+
+
+
 public struct TextureWithoutRender:TextureProvider  {
+  
+    
     public func render(commandBuffer: any MTLCommandBuffer) -> (any MTLTexture)? {
         target_texture
     }
@@ -26,18 +57,20 @@ public struct TextureWithoutRender:TextureProvider  {
 }
 
 extension MTLTexture {
-    public var withoutRender:TextureWithoutRender {
+    public var textureProvider:TextureWithoutRender {
         TextureWithoutRender(target_texture: self)
     }
 }
 
 public class WithoutRender :TextureProvider {
+    
     public func render(commandBuffer: any MTLCommandBuffer) -> (any MTLTexture)? {
         pipeline.target_texture
     }
     
     public init( pipeline: TextureProvider) {
         self.pipeline = pipeline
+        
     }
     
     public var target_texture:MTLTexture? { pipeline.target_texture }

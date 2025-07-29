@@ -1,59 +1,60 @@
 //
-//  MetalView.swift
-//  
+//  SwiftUIView.swift
+//  MetalUtilities
 //
-//  Created by David Crooks on 11/02/2022.
+//  Created by David Crooks on 29/07/2025.
 //
+
+import SwiftUI
 
 import SwiftUI
 import Metal
 import MetalKit
-import UIKit
-import Combine
 
-public enum Action {
-    case configure(MTKView)
-    case draw(MTKView)
-    case sizeWillChange(CGSize,MTKView)
+#if os(iOS) || os(watchOS) || os(tvOS)
+    import UIKit
+#elseif os(macOS)
+   import AppKit
+#endif
+
+
+protocol MetalViewDelegate : MTKViewDelegate {
+    func initialise(view:MTKView)
 }
 
-public struct MetalView<S>: UIViewRepresentable where S:Subject, S.Output == Action, S.Failure == Never {
-    
-    public init(actions:S, device:MTLDevice){
-        self.actions = actions
-        self.device = device
+
+#if os(iOS) || os(watchOS) || os(tvOS)
+
+public struct MetalView: UIViewRepresentable  {
+   
+    public init(delegate:MTKViewDelegate,pixelFormat:MTLPixelFormat = .bgra8Unorm,framebufferOnly:Bool = true){
+        self.delegate = delegate
+        self.pixelFormat = pixelFormat
+        self.framebufferOnly = framebufferOnly
     }
     
-    let actions:S
-    let device:MTLDevice
+    let delegate:MTKViewDelegate
+    let pixelFormat:MTLPixelFormat
+    let framebufferOnly:Bool
     
     public func makeUIView(context: Context) -> MTKView {
-        let mtkView = MTKView(frame: .zero, device: device)
-        mtkView.backgroundColor = UIColor.black
-        mtkView.delegate = context.coordinator
-        actions.send(.configure(mtkView))
+        let mtkView = MTKView(frame: .zero)
+        
+        mtkView.backgroundColor = UIColor.clear
+        mtkView.delegate =  delegate
+        mtkView.device = MTLCreateSystemDefaultDevice()
+        mtkView.colorPixelFormat = pixelFormat
+        mtkView.framebufferOnly = framebufferOnly
+        
         return mtkView
     }
     
-    public class Coordinator: NSObject, MTKViewDelegate {
-        let actions:S
-        
-        init(actions:S) {
-            self.actions = actions
-        }
-        
-        public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
-            actions.send(.sizeWillChange(size, view))
-        }
-        
-        public func draw(in view: MTKView) {
-            actions.send(.draw(view))
-        }
-        
+    public class Coordinator {
+       
     }
     
     public func makeCoordinator() -> Coordinator {
-        return Coordinator(actions: actions)
+        return Coordinator()
     }
     
     public func updateUIView(_ uiView: MTKView, context: Context) {
@@ -61,3 +62,40 @@ public struct MetalView<S>: UIViewRepresentable where S:Subject, S.Output == Act
     }
 }
 
+#elseif os(macOS)
+struct MetalView: NSViewRepresentable  {
+    typealias NSViewType =  MTKView
+
+    public init(delegate:MetalViewDelegate, device:MTLDevice){
+        self.delegate = delegate
+        self.device = device
+    }
+    
+    let delegate:MetalViewDelegate
+    let device:MTLDevice
+    
+    public func makeNSView(context: Context) -> MTKView {
+        let mtkView = MTKView(frame: .zero, device: device)
+
+       // mtkView.backgroundColor = UIColor.clear
+        
+
+        delegate.initialise(view: mtkView)
+        mtkView.delegate =  delegate
+        mtkView.framebufferOnly = false
+        return mtkView
+    }
+    
+    public class Coordinator {
+       
+    }
+    
+    public func makeCoordinator() -> Coordinator {
+        return Coordinator()
+    }
+    
+    public func updateNSView(_ uiView: MTKView, context: Context) {
+        
+    }
+}
+#endif
