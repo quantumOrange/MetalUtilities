@@ -22,15 +22,6 @@ extension PassthroughUniforms {
     }
 }
 
-public struct ImageVertex : Codable {
-    public init(position:SIMD2<Float>,texCoord:SIMD2<Float>) {
-        self.position = position
-        self.texCoord = texCoord
-    }
-    
-    public let position:SIMD2<Float>
-    public let texCoord:SIMD2<Float>
-}
 
 public protocol ViewRendererDelegate: AnyObject  {
     func drawableSizeWillChange(_ size:CGSize)
@@ -208,32 +199,13 @@ public final class ViewRenderer:NSObject,MTKViewDelegate {
         guard let vertexFunction:MTLFunction = library.makeFunction(name: vertexShader),
               let fragmentFunction:MTLFunction = library.makeFunction(name: fragmentShader) else {throw Errors.cannotCompileShaders}
        
-        
-        // Create a vertex descriptor for our image plane vertex buffer
-        let imagePlaneVertexDescriptor = MTLVertexDescriptor()
-        
-        // Positions.
-        imagePlaneVertexDescriptor.attributes[0].format = .float2
-        imagePlaneVertexDescriptor.attributes[0].offset = 0
-        imagePlaneVertexDescriptor.attributes[0].bufferIndex = 0
-        
-        // Texture coordinates.
-        imagePlaneVertexDescriptor.attributes[1].format = .float2
-        imagePlaneVertexDescriptor.attributes[1].offset = 8
-        imagePlaneVertexDescriptor.attributes[1].bufferIndex = 0
-        
-        // Buffer Layout
-        imagePlaneVertexDescriptor.layouts[0].stride = 16
-        imagePlaneVertexDescriptor.layouts[0].stepRate = 1
-        imagePlaneVertexDescriptor.layouts[0].stepFunction = .perVertex
-        
         // Create a pipeline state for rendering the captured image
         let pipelineStateDescriptor = MTLRenderPipelineDescriptor()
         pipelineStateDescriptor.label = "PassthouPipeline"
         //pipelineStateDescriptor.sampleCount = 1
         pipelineStateDescriptor.vertexFunction = vertexFunction
         pipelineStateDescriptor.fragmentFunction = fragmentFunction
-        pipelineStateDescriptor.vertexDescriptor = imagePlaneVertexDescriptor
+        pipelineStateDescriptor.vertexDescriptor = ImageVertex.vertexDescriptor
         pipelineStateDescriptor.colorAttachments[0].pixelFormat = pixelFormat
        
         do {
