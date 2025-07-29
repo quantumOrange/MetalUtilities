@@ -10,7 +10,6 @@ import Metal
 import MetalKit
 import simd
 
-fileprivate let maxBuffersInFlight = 3
 
 public final class Compute<Uniforms> {
     static var alignedUniformsSize: Int {

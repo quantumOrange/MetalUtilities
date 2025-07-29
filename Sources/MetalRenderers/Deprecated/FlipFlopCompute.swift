@@ -2,62 +2,41 @@
 //  File.swift
 //  
 //
-//  Created by David Crooks on 15/02/2022.
+//  Created by David Crooks on 17/02/2022.
 //
 
+import Foundation
 import Foundation
 import Metal
 import MetalKit
 import simd
 
-public protocol Uniforming {
-    var width:UInt32 { get set }
-    var height:UInt32 { get set }
-    var time:Float { get set }
-}
 
-extension Uniforming {
-    static var alignedUniformsSize: Int {
-        (MemoryLayout<Self>.size + 0xFF) & -0x100
-    }
-}
+public actor FlipFlopCompute<Uniforms:Uniforming> {
 
-fileprivate let maxBuffersInFlight = 3
-
-public actor ComputeActor<Uniforms> {
-    static var alignedUniformsSize: Int {
-        (MemoryLayout<Uniforms>.size + 0xFF) & -0x100
-    }
-    
-    
     let library:MTLLibrary
     var computePipeline:MTLComputePipelineState!
     let commandQueue: MTLCommandQueue
    
-    //let inFlightSemaphore = DispatchSemaphore(value: maxBuffersInFlight)
-    let inFlightSemaphore = DispatchSemaphore(value: 1)
+    let inFlightSemaphore = DispatchSemaphore(value: maxBuffersInFlight)
     
     var uniformBuffer: MTLBuffer
     var uniformBufferOffset = 0
     var uniformBufferIndex = 0
     var uniforms: UnsafeMutablePointer<Uniforms>
     
+    var size:CGSize = CGSize.zero
 
-    public var target_texture:MTLTexture!
+    var target_0:MTLTexture!
+    var target_1:MTLTexture!
     
-    public var input_texture:MTLTexture?
-    
-    public func setInputTexture(texture:MTLTexture?) {
-        input_texture = texture
-    }
-   
     public init?(commandQueue:MTLCommandQueue, library:MTLLibrary, device:MTLDevice, initialValue:Uniforms, kernalName:String ) async  {
        
         self.library = library
        
         self.commandQueue = commandQueue
         
-        let uniformBufferSize = ComputeActor<Uniforms>.alignedUniformsSize * maxBuffersInFlight
+        let uniformBufferSize = Uniforms.alignedUniformsSize * maxBuffersInFlight
         
         guard let buffer = device.makeBuffer(length:uniformBufferSize, options:[MTLResourceOptions.storageModeShared]) else { return nil }
         uniformBuffer = buffer
@@ -81,25 +60,30 @@ public actor ComputeActor<Uniforms> {
     
     func updateUniforms(values:Uniforms) {
         updateDynamicBufferState()
-      
         uniforms.pointee = values
+        uniforms.pointee.time =  Float(CACurrentMediaTime())
     }
-   
+    
+    var startTime:Double = 0
+    
+    var currentTime:Double {
+        CACurrentMediaTime() - startTime
+    }
+    
     private func updateDynamicBufferState() {
         /// Update the state of our uniform buffers before rendering
         
         uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
-        uniformBufferOffset = ComputeActor<Uniforms>.alignedUniformsSize * uniformBufferIndex
+        uniformBufferOffset = Uniforms.alignedUniformsSize * uniformBufferIndex
         
         uniforms = UnsafeMutableRawPointer(uniformBuffer.contents() + uniformBufferOffset).bindMemory(to:Uniforms.self, capacity:1)
     }
     
     public func draw(with values:Uniforms, in drawable: CAMetalDrawable? = nil) -> MTLTexture? {
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return nil }
-        let width = target_texture.width
-        let height = target_texture.height
-        //let width = Int(size.width)
-        //let height = Int(size.height)
+        
+        let width = Int(size.width)
+        let height = Int(size.height)
        
         guard width > 0, height > 0 else { return nil }
        
@@ -116,55 +100,52 @@ public actor ComputeActor<Uniforms> {
         let computeEncoder = commandBuffer.makeComputeCommandEncoder()!
         
         computeEncoder.setBuffer(uniformBuffer, offset: uniformBufferOffset, index: 0)
-        computeEncoder.setTexture(target_texture, index: 0)
-        
-        if let input_texture {
-            computeEncoder.setTexture(input_texture, index: 1)
-        }
-        
+        computeEncoder.setTexture(target_0, index: 0)
+        computeEncoder.setTexture(target_1, index: 1)
         computeEncoder.setComputePipelineState(computePipeline)
         computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
         computeEncoder.endEncoding()
         
         if let drawable = drawable {
-            
             let blitEncoder = commandBuffer.makeBlitCommandEncoder()
-            blitEncoder?.copy(from:target_texture, to: drawable.texture)
+            blitEncoder?.copy(from:target_1, to: drawable.texture)
             blitEncoder?.endEncoding()
                 
             commandBuffer.present(drawable)
         }
         
+        
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
-        inFlightSemaphore.signal()
+        
         //let duration = commandBuffer.gpuStartTime -  commandBuffer.gpuEndTime
         //print("Compute duration:\(duration)")
     
-        //
+        inFlightSemaphore.signal()
         
-        return target_texture
+        swap(&target_0,&target_1)
+        return target_0
     }
     
     public func drawableSizeWillChange(size:CGSize, pixelFormat:MTLPixelFormat, device:MTLDevice) {
-        // self.size = size
+        self.size = size
         
         let width = Int(size.width)
         let height = Int(size.height)
-       
+
         guard width > 0, height > 0 else { return }
-         
-         
-         let renderTargetDescriptor = MTLTextureDescriptor()
-      
-         renderTargetDescriptor.pixelFormat = pixelFormat
-         renderTargetDescriptor.textureType =  MTLTextureType.type2D
-         renderTargetDescriptor.mipmapLevelCount = 4
-         renderTargetDescriptor.width = width
-         renderTargetDescriptor.height = height
-         
-         renderTargetDescriptor.usage = [ MTLTextureUsage.shaderRead , MTLTextureUsage.shaderWrite ]
-         
-         target_texture = device.makeTexture(descriptor:renderTargetDescriptor)!
+
+        let renderTargetDescriptor = MTLTextureDescriptor()
+
+        renderTargetDescriptor.pixelFormat = pixelFormat
+        renderTargetDescriptor.textureType =  MTLTextureType.type2D
+        renderTargetDescriptor.mipmapLevelCount = 4
+        renderTargetDescriptor.width = width
+        renderTargetDescriptor.height = height
+
+        renderTargetDescriptor.usage = [ MTLTextureUsage.shaderRead , MTLTextureUsage.shaderWrite ]
+
+        target_0 = device.makeTexture(descriptor:renderTargetDescriptor)!
+        target_1 = device.makeTexture(descriptor:renderTargetDescriptor)!
     }
 }
