@@ -14,16 +14,11 @@ public protocol BufferProvider {
     var  buffer:MTLBuffer? { get }
 }
 
-
-
 public protocol VertexBuffer:BufferProvider {
     var start:Int { get }
     var count:Int { get }
     var type:MTLPrimitiveType { get }
 }
-
-
-
 
 public final class ConstantBuffer<T> : VertexBuffer {
     
@@ -52,7 +47,6 @@ public final class ConstantBuffer<T> : VertexBuffer {
         return buffer
     }
 }
-
 
 public final class UpdatableBuffer<T> : BufferProvider {
     var bufferIndex : Int = 0

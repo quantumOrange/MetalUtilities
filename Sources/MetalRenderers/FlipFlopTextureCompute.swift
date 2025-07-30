@@ -1,17 +1,14 @@
 //
-//  ComputeRenderer.swift
-//  TimeWarpVFX
+//  File.swift
+//  MetalUtilities
 //
-//  Created by David Crooks on 23/07/2025.
+//  Created by David Crooks on 30/07/2025.
 //
 
 import Foundation
 import Metal
 
-let maxBuffersInFlight = 3
-
-public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
-    
+public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMaker {
     public let pixelFormat:MTLPixelFormat = .bgra8Unorm
     public let device:MTLDevice
     let library:MTLLibrary
@@ -19,13 +16,13 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
     let commandQueue: MTLCommandQueue
     let kernalName:String
    
-    
     var renderTarget:Bool
-   
-
-    public var target_texture:MTLTexture?
-  
-    public var input:TextureProvider?
+    
+    public var target_texture:MTLTexture? { input }
+    
+    public var output:MTLTexture
+    public var input:MTLTexture
+    
     public var input2:TextureProvider?
     public var input3:TextureProvider?
     public var input4:TextureProvider?
@@ -33,8 +30,8 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
     public var bufferProvider1:BufferProvider?
     public var bufferProvider2:BufferProvider?
     
-    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary,  initialValue:Uniforms, kernalName:String, size:CGSize? = nil, pixelFormat:MTLPixelFormat,renderTarget:Bool = false)   {
-       
+    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary,input:MTLTexture, initialValue:Uniforms, kernalName:String, size:CGSize? = nil, renderTarget:Bool = false)   {
+        pixelFormat = input.pixelFormat
         self.library = library
         self.device = commandQueue.device
         self.commandQueue = commandQueue
@@ -43,9 +40,10 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
         self.uniforms = UniformsBuffer(device:commandQueue.device, initialValue: initialValue)
         self.kernalName = kernalName
         try? createPipelines(device:commandQueue.device,kernalName:kernalName)
-        if let size {
-            createTarget(size:size)
-        }
+        self.input = input
+        
+        self.output =  makeTexture(width:input.width, height: input.height,lable: "Target \(kernalName.capitalized)",renderTarget: renderTarget)
+        
     }
     
     func createPipelines(device:MTLDevice,kernalName:String) throws {
@@ -63,7 +61,10 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
     var uniforms: UniformsBuffer<Uniforms>
    
     public func render(commandBuffer:MTLCommandBuffer) -> MTLTexture? {
-        guard let target_texture else { return nil }
+        defer {
+            swap(&target_texture,&input)
+        }
+       // guard let target_texture else { return nil }
         let width = target_texture.width
         let height = target_texture.height
         //let width = Int(size.width)
@@ -78,7 +79,7 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
                                    height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
                                    depth: 1);
         
-        let input_texture = input?.render(commandBuffer: commandBuffer)
+        //let input_texture = input?.render(commandBuffer: commandBuffer)
         let input_texture2 = input2?.render(commandBuffer: commandBuffer)
         let input_texture3 = input3?.render(commandBuffer: commandBuffer)
         let input_texture4 = input4?.render(commandBuffer: commandBuffer)

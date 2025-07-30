@@ -9,10 +9,10 @@ import Foundation
 import Metal
 
 
-class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
+public final class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
     
     
-    var buffer: (any MTLBuffer)?
+    public var buffer: (any MTLBuffer)? { outputBuffer }
     
     
     public let pixelFormat:MTLPixelFormat = .bgra8Unorm
@@ -25,7 +25,6 @@ class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
     let count:Int
     var renderTarget:Bool
 
-    
     public var input:TextureProvider?
     public var input2:TextureProvider?
     public var input3:TextureProvider?
@@ -72,7 +71,7 @@ class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
         computePipeline =  try device.makeComputePipelineState(descriptor: computeDescriptor, options: MTLPipelineOption(rawValue: 0), reflection: nil)
     }
 
-    func update(commandBuffer: any MTLCommandBuffer) -> MTLBuffer? {
+    public func update(commandBuffer: any MTLCommandBuffer) -> MTLBuffer? {
         swap(&inputBuffer,&outputBuffer)
         
         //let width = Int(size.width)
