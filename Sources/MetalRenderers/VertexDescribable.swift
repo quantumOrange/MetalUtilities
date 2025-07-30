@@ -87,3 +87,46 @@ extension PointVertex : VertexDescribable {
     }
     
 }
+
+
+public struct PointVertex2D {
+    let position:SIMD2<Float>
+    let size:Float
+    let value:Float
+    
+    public init(position: SIMD2<Float>, size: Float, value: Float) {
+        self.position = position
+        self.size = size
+        self.value = value
+    }
+}
+
+extension PointVertex2D : VertexDescribable {
+    
+    public  static func vertexDescriptor(bufferIndex:Int = 0) -> MTLVertexDescriptor {
+        let vertexDescriptor = MTLVertexDescriptor()
+        // We have to tell metal what kind of vertex data to expect
+        //position
+        vertexDescriptor.attributes[0].format = .float2
+        vertexDescriptor.attributes[0].offset = MemoryLayout<PointVertex2D>.offset(of: \PointVertex2D.position)!
+        vertexDescriptor.attributes[0].bufferIndex = bufferIndex
+        
+        //size
+        vertexDescriptor.attributes[1].format = .float
+        vertexDescriptor.attributes[1].offset = MemoryLayout<PointVertex2D>.offset(of: \PointVertex2D.size)!
+        vertexDescriptor.attributes[1].bufferIndex = bufferIndex
+        
+        //Value
+        vertexDescriptor.attributes[2].format = .float
+        vertexDescriptor.attributes[2].offset = MemoryLayout<PointVertex2D>.offset(of: \PointVertex2D.value)!
+        vertexDescriptor.attributes[2].bufferIndex = bufferIndex
+        
+        //Attribute at index 0 references a buffer at index 0 that has no stride
+        vertexDescriptor.layouts[0].stride = MemoryLayout<PointVertex2D>.stride
+        vertexDescriptor.layouts[0].stepRate = 1
+        vertexDescriptor.layouts[0].stepFunction = .perVertex
+        
+        return vertexDescriptor
+    }
+    
+}
