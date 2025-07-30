@@ -26,7 +26,6 @@ final class UniformsBuffer<Uniforms> {
 
     public init(device:MTLDevice, initialValue:Uniforms, name:String = "")  {
 
-        
         let uniformBufferSize = Self.alignedUniformsSize * maxBuffersInFlight
         
         guard let buffer = device.makeBuffer(length:uniformBufferSize, options:[MTLResourceOptions.storageModeShared]) else {  fatalError() }

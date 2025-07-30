@@ -59,11 +59,9 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
     public func update(uniforms value:Uniforms) {
         uniforms.uniforms = value
     }
-    
+
     var uniforms: UniformsBuffer<Uniforms>
    
-    
-    
     public func render(commandBuffer:MTLCommandBuffer) -> MTLTexture? {
         guard let target_texture else { return nil }
         let width = target_texture.width
@@ -109,12 +107,12 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
             computeEncoder.setTexture(input_texture4, index: 4)
         }
         
-        if let (offset,buffer) = buffer1 {
-            computeEncoder.setBuffer(buffer, offset:offset , index: 1)
+        if let buffer = buffer1 {
+            computeEncoder.setBuffer(buffer, offset:0 , index: 1)
         }
         
-        if let (offset,buffer) = buffer2 {
-            computeEncoder.setBuffer(buffer, offset:offset , index: 2)
+        if let buffer = buffer2 {
+            computeEncoder.setBuffer(buffer, offset:0 , index: 2)
         }
         
         computeEncoder.label = "Compute Encoder \(kernalName.capitalized)"

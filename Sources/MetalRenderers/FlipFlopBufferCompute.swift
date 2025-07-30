@@ -11,6 +11,10 @@ import Metal
 
 class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
     
+    
+    var buffer: (any MTLBuffer)?
+    
+    
     public let pixelFormat:MTLPixelFormat = .bgra8Unorm
     public let device:MTLDevice
     let library:MTLLibrary
@@ -32,7 +36,7 @@ class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
     
     var uniforms: UniformsBuffer<Uniforms>
     
-    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary? = nil, values:[T], initialUniforms:Uniforms, kernalName:String, size:CGSize? = nil, pixelFormat:MTLPixelFormat = .bgra8Unorm,renderTarget:Bool = false)   {
+    public init(commandQueue:MTLCommandQueue, library:MTLLibrary? = nil, values:[T], initialUniforms:Uniforms, kernalName:String, size:CGSize? = nil, pixelFormat:MTLPixelFormat = .bgra8Unorm,renderTarget:Bool = false) throws   {
        
         self.library = library ?? commandQueue.device.makeDefaultLibrary()!
         self.device = commandQueue.device
@@ -42,16 +46,16 @@ class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
         self.kernalName = kernalName
         
         count = values.count
-        inputBuffer = try buildBuffer(device:device,values: values,name:"A")
-        outputBuffer = try buildBuffer(device:device,values: values,name:"B")
+        inputBuffer = try buildBuffer(device:device,values: values,name:"\(kernalName) A")
+        outputBuffer = try buildBuffer(device:device,values: values,name:"\(kernalName) B")
         
-        try? createPipelines(device:commandQueue.device,kernalName:kernalName)
+        try createPipelines(device:commandQueue.device,kernalName:kernalName)
     }
     
     public func buildBuffer(device:MTLDevice, values:[T],name:String) throws -> MTLBuffer {
         guard let buffer = device.makeBuffer(length:values.byteLength, options:[MTLResourceOptions.storageModeShared]) else { throw MetalErrors.cannotBuildBuffer }
 
-        buffer.label = "\(lable ?? "") \(name) Buffer"
+        buffer.label = "\(name) Buffer"
         buffer.contents().copyMemory(from: values, byteCount: values.byteLength)
         return buffer
     }
@@ -68,14 +72,13 @@ class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
         computePipeline =  try device.makeComputePipelineState(descriptor: computeDescriptor, options: MTLPipelineOption(rawValue: 0), reflection: nil)
     }
 
-    public func update(commandBuffer:MTLCommandBuffer) -> MTLBuffer? {
+    func update(commandBuffer: any MTLCommandBuffer) -> MTLBuffer? {
         swap(&inputBuffer,&outputBuffer)
-        let width = target_texture.width
-        let height = target_texture.height
+        
         //let width = Int(size.width)
         //let height = Int(size.height)
         print("compute render \(kernalName)")
-        guard width > 0, height > 0 else { print("size zero!!"); return nil }
+       
         
         uniforms.updateUniforms()
         
@@ -88,8 +91,8 @@ class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
         
         let computeEncoder = commandBuffer.makeComputeCommandEncoder()!
         
-        computeEncoder.setBuffer(uniformBuffer.buffer, offset: uniformBuffer.uniformBufferOffset, index: 0)
-        computeEncoder.setTexture(target_texture, index: 0)
+        computeEncoder.setBuffer(uniforms.uniformBuffer, offset: uniforms.uniformBufferOffset, index: 0)
+        
         
         if let input_texture {
             computeEncoder.setTexture(input_texture, index: 1)

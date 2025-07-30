@@ -61,7 +61,7 @@ public final class VertexRenderer<Uniforms, Vertex:VertexDescribable> : TextureP
     
     public func render(commandBuffer: any MTLCommandBuffer) -> (any MTLTexture)? {
         uniforms.updateUniforms()
-        guard let (offset, vertexBuffer) =  vertexBufferProvider.update(commandBuffer: commandBuffer)
+        guard let vertexBuffer =  vertexBufferProvider.update(commandBuffer: commandBuffer)
         else { return nil}
         
         let input_texture0 = input0?.render(commandBuffer: commandBuffer)
@@ -88,7 +88,7 @@ public final class VertexRenderer<Uniforms, Vertex:VertexDescribable> : TextureP
         renderEncoder.setFragmentBuffer(uniforms.uniformBuffer, offset: uniforms.uniformBufferOffset, index: 1)
         
         // Here we set the veticies
-        renderEncoder.setVertexBuffer(vertexBuffer, offset: offset, index: 0)
+        renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
         
         if let input_texture0 {
             renderEncoder.setFragmentTexture(input_texture0, index: 0)
