@@ -83,10 +83,10 @@ public final class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
         
         
         
-        let input_texture = input?.render(commandBuffer: commandBuffer)
-        let input_texture2 = input2?.render(commandBuffer: commandBuffer)
-        let input_texture3 = input3?.render(commandBuffer: commandBuffer)
-        let input_texture4 = input4?.render(commandBuffer: commandBuffer)
+        let input_texture = input?.render(commandBuffer: commandBuffer,t:t,dt:dt)
+        let input_texture2 = input2?.render(commandBuffer: commandBuffer,t:t,dt:dt)
+        let input_texture3 = input3?.render(commandBuffer: commandBuffer,t:t,dt:dt)
+        let input_texture4 = input4?.render(commandBuffer: commandBuffer,t:t,dt:dt)
         
         let computeEncoder = commandBuffer.makeComputeCommandEncoder()!
         

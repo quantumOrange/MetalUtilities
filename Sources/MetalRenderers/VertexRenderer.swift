@@ -59,21 +59,21 @@ public final class VertexRenderer<Uniforms, Vertex:VertexDescribable> : TextureP
         try createPipelines(enableBlending: enableBlending,vertex:vertex,fragment:fragment)
     }
     
-    public func render(commandBuffer: any MTLCommandBuffer) -> (any MTLTexture)? {
+    public func render(commandBuffer: any MTLCommandBuffer,t:Float,dt:Float) -> (any MTLTexture)? {
         uniforms.updateUniforms()
         guard let vertexBuffer =  vertexBufferProvider.update(commandBuffer: commandBuffer)
         else { return nil}
         
-        let input_texture0 = input0?.render(commandBuffer: commandBuffer)
-        let input_texture1 = input1?.render(commandBuffer: commandBuffer)
-        let input_texture2 = input2?.render(commandBuffer: commandBuffer)
-        let input_texture3 = input3?.render(commandBuffer: commandBuffer)
-        let input_texture4 = input4?.render(commandBuffer: commandBuffer)
+        let input_texture0 = input0?.render(commandBuffer: commandBuffer,t:t,dt:dt)
+        let input_texture1 = input1?.render(commandBuffer: commandBuffer,t:t,dt:dt)
+        let input_texture2 = input2?.render(commandBuffer: commandBuffer,t:t,dt:dt)
+        let input_texture3 = input3?.render(commandBuffer: commandBuffer,t:t,dt:dt)
+        let input_texture4 = input4?.render(commandBuffer: commandBuffer,t:t,dt:dt)
         
         let renderPass = MTLRenderPassDescriptor()
         
         renderPass.colorAttachments[0].texture = target_texture // This is where we are going to draw
-        renderPass.colorAttachments[0].clearColor = MTLClearColor(red:0.0,green:0.0,blue:0.0,alpha:0.0)
+        renderPass.colorAttachments[0].clearColor = MTLClearColor(red:0.0,green:0.0,blue:0.0,alpha:1.0)
         renderPass.colorAttachments[0].loadAction =  .clear
         renderPass.colorAttachments[0].storeAction = .store
         
@@ -165,5 +165,9 @@ public final class VertexRenderer<Uniforms, Vertex:VertexDescribable> : TextureP
         let width = Int(size.width)
         let height = Int(size.height)
         target_texture = makeTexture(width:width, height: height,lable: "Target \(name.capitalized)",renderTarget: true)
+    }
+    
+    public func drawableSizeWillChange(_ size:CGSize) {
+        createTarget(size:size)
     }
 }

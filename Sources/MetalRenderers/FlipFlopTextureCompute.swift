@@ -60,7 +60,7 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
 
     var uniforms: UniformsBuffer<Uniforms>
    
-    public func render(commandBuffer:MTLCommandBuffer) -> MTLTexture? {
+    public func render(commandBuffer:MTLCommandBuffer,t:Float,dt:Float) -> MTLTexture? {
         defer {
             swap(&target_texture,&input)
         }
@@ -80,9 +80,9 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
                                    depth: 1);
         
         //let input_texture = input?.render(commandBuffer: commandBuffer)
-        let input_texture2 = input2?.render(commandBuffer: commandBuffer)
-        let input_texture3 = input3?.render(commandBuffer: commandBuffer)
-        let input_texture4 = input4?.render(commandBuffer: commandBuffer)
+        let input_texture2 = input2?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
+        let input_texture3 = input3?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
+        let input_texture4 = input4?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         
         let buffer1 = bufferProvider1?.update(commandBuffer: commandBuffer)
         let buffer2 = bufferProvider2?.update(commandBuffer: commandBuffer)
@@ -129,6 +129,11 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
         let height = Int(size.height)
         target_texture = makeTexture(width:width, height: height,lable: "Target \(kernalName.capitalized)",renderTarget: renderTarget)
     }
+    
+    public func drawableSizeWillChange(_ size:CGSize) {
+        createTarget(size:size)
+    }
+    
 }
 
 

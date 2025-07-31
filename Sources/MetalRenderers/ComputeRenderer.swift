@@ -62,7 +62,7 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
 
     var uniforms: UniformsBuffer<Uniforms>
    
-    public func render(commandBuffer:MTLCommandBuffer) -> MTLTexture? {
+    public func render(commandBuffer:MTLCommandBuffer,t:Float,dt:Float) -> MTLTexture? {
         guard let target_texture else { return nil }
         let width = target_texture.width
         let height = target_texture.height
@@ -78,10 +78,10 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
                                    height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
                                    depth: 1);
         
-        let input_texture = input?.render(commandBuffer: commandBuffer)
-        let input_texture2 = input2?.render(commandBuffer: commandBuffer)
-        let input_texture3 = input3?.render(commandBuffer: commandBuffer)
-        let input_texture4 = input4?.render(commandBuffer: commandBuffer)
+        let input_texture = input?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
+        let input_texture2 = input2?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
+        let input_texture3 = input3?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
+        let input_texture4 = input4?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         
         let buffer1 = bufferProvider1?.update(commandBuffer: commandBuffer)
         let buffer2 = bufferProvider2?.update(commandBuffer: commandBuffer)
@@ -127,6 +127,10 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
         let width = Int(size.width)
         let height = Int(size.height)
         target_texture = makeTexture(width:width, height: height,lable: "Target \(kernalName.capitalized)",renderTarget: renderTarget)
+    }
+    
+    public func drawableSizeWillChange(_ size:CGSize) {
+        createTarget(size:size)
     }
 }
 

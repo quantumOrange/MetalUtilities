@@ -76,8 +76,21 @@ public final class ViewRenderer:NSObject,MTKViewDelegate {
         super.init()
         try buildBuffers(device: device)
         try createPipeline()
+        
+        startTime = CACurrentMediaTime()
     }
-
+    
+    var lastRenderTime:Double = 0
+    var startTime:Double = 0
+    
+    func reset() {
+        startTime = CACurrentMediaTime()
+    }
+    
+    var currentTime:Double {
+        CACurrentMediaTime() - startTime
+    }
+    
     var device: MTLDevice!
     var library: MTLLibrary!
     var commandQueue: MTLCommandQueue
@@ -111,12 +124,15 @@ public final class ViewRenderer:NSObject,MTKViewDelegate {
     ]
     
     public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
+        input.drawableSizeWillChange(size)
         delagate?.drawableSizeWillChange(size)
     }
     
-    var pauseRenderering = false
+    public var pauseRenderering = false
     
     public func draw(in view: MTKView) {
+        let t = currentTime
+        let dt = t - lastRenderTime
         guard !pauseRenderering else { return }
         delagate?.update()
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
@@ -133,7 +149,7 @@ public final class ViewRenderer:NSObject,MTKViewDelegate {
             }
         }
         
-        guard let texture = input.render(commandBuffer: commandBuffer) else {
+        guard let texture = input.render(commandBuffer: commandBuffer,t: Float(t), dt: Float(dt)) else {
             print("view input texture is nil")
             return }
         

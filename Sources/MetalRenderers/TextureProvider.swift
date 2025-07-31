@@ -9,11 +9,10 @@ import Foundation
 import Metal
 
 public protocol TextureProvider {
-    func render(commandBuffer:MTLCommandBuffer) -> MTLTexture?
+    func render(commandBuffer:MTLCommandBuffer,t:Float,dt:Float) -> MTLTexture?
     var target_texture:MTLTexture? { get }
-    
+    func drawableSizeWillChange(_ size:CGSize)
 }
-
 
 
 public enum TextureDestination {
@@ -43,9 +42,7 @@ public enum TextureDestination {
 
 
 public struct TextureWithoutRender:TextureProvider  {
-  
-    
-    public func render(commandBuffer: any MTLCommandBuffer) -> (any MTLTexture)? {
+    public func render(commandBuffer: any MTLCommandBuffer,t:Float,dt:Float) -> (any MTLTexture)? {
         target_texture
     }
     
@@ -54,6 +51,8 @@ public struct TextureWithoutRender:TextureProvider  {
     }
     
     public var target_texture:MTLTexture?
+    
+    public func drawableSizeWillChange(_ size: CGSize) { }
 }
 
 extension MTLTexture {
@@ -64,7 +63,7 @@ extension MTLTexture {
 
 public class WithoutRender :TextureProvider {
     
-    public func render(commandBuffer: any MTLCommandBuffer) -> (any MTLTexture)? {
+    public func render(commandBuffer: any MTLCommandBuffer,t:Float,dt:Float) -> (any MTLTexture)? {
         pipeline.target_texture
     }
     
@@ -76,6 +75,8 @@ public class WithoutRender :TextureProvider {
     public var target_texture:MTLTexture? { pipeline.target_texture }
     
     var pipeline:TextureProvider
+    
+    public func drawableSizeWillChange(_ size: CGSize) { }
 }
 
 

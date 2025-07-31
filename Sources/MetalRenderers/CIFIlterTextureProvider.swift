@@ -16,6 +16,12 @@ protocol Filter {
 }
 
 class CIFilterTextureProvider : TextureProvider, TextureMaker {
+    
+    
+    func drawableSizeWillChange(_ size: CGSize) {
+        
+    }
+    
     var target_texture: (any MTLTexture)? //{   input?.target_texture }
     var context:CIContext
     var device:MTLDevice
@@ -30,8 +36,8 @@ class CIFilterTextureProvider : TextureProvider, TextureMaker {
     
     var filter:Filter
     
-    func render(commandBuffer: any MTLCommandBuffer) -> (any MTLTexture)? {
-        guard let inputTexture = input?.render(commandBuffer: commandBuffer) else { return nil }
+    func render(commandBuffer: any MTLCommandBuffer,t: Float, dt: Float) -> (any MTLTexture)? {
+        guard let inputTexture = input?.render(commandBuffer: commandBuffer,t:t,dt:dt) else { return nil }
         
         if target_texture == nil {
             target_texture = makeTexture(width: inputTexture.width, height: inputTexture.height)
