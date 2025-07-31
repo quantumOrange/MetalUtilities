@@ -33,7 +33,28 @@ public extension TextureMaker {
         return tex
     }
     
-    func makeTexture3d(width:Int,height:Int, depth:Int) -> (Int,MTLTexture?) {
+    func makeTexture3d(width:Int,height:Int, depth:Int) -> MTLTexture? {
+        let maxTexDimension = 2048
+        
+        var w = width
+        var h = height
+        var d = depth
+    
+        let descriptor = MTLTextureDescriptor()
+        
+        descriptor.textureType = .type3D
+        descriptor.pixelFormat = pixelFormat
+        descriptor.width = width
+        descriptor.height = height
+        descriptor.depth =  depth
+        descriptor.usage =  MTLTextureUsage(rawValue: MTLTextureUsage.shaderWrite.rawValue | MTLTextureUsage.shaderRead.rawValue )
+        
+        var tex:MTLTexture? = device.makeTexture(descriptor: descriptor)
+        
+        return tex
+    }
+    
+    func makeTexture3d(width:Int,height:Int,maxDepth depth:Int) -> (Int,MTLTexture?) {
         let maxTexDimension = 2048
         
         var w = width
@@ -55,7 +76,7 @@ public extension TextureMaker {
         }
         
         let descriptor = MTLTextureDescriptor()
-        
+        MTLPixelFormat.a8Unorm
         descriptor.textureType = .type3D
         descriptor.pixelFormat = pixelFormat
         descriptor.width = w
