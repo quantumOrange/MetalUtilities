@@ -83,8 +83,8 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
         let input_texture3 = input3?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         let input_texture4 = input4?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         
-        let buffer1 = bufferProvider1?.update(commandBuffer: commandBuffer)
-        let buffer2 = bufferProvider2?.update(commandBuffer: commandBuffer)
+        let buffer1 = bufferProvider1?.update(commandBuffer: commandBuffer,t:t,dt:dt)
+        let buffer2 = bufferProvider2?.update(commandBuffer: commandBuffer,t:t,dt:dt) 
       
         let computeEncoder = commandBuffer.makeComputeCommandEncoder()!
         
@@ -119,7 +119,7 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
         computeEncoder.setComputePipelineState(computePipeline)
         computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
         computeEncoder.endEncoding()
-        print("target text size:\(target_texture.width),\(target_texture.height)")
+       // print("target text size:\(target_texture.width),\(target_texture.height)")
         return target_texture
     }
     
