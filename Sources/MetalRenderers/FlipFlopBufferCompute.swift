@@ -32,10 +32,11 @@ public final class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
     public var inputBuffer:MTLBuffer?
     public var outputBuffer:MTLBuffer?
     
+    var updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil
     var uniforms: UniformsBuffer<Uniforms>
     
-    public init(commandQueue:MTLCommandQueue, library:MTLLibrary? = nil, values:[T], initialUniforms:Uniforms, kernalName:String, size:CGSize? = nil, pixelFormat:MTLPixelFormat = .bgra8Unorm,renderTarget:Bool = false) throws   {
-       
+    public init(commandQueue:MTLCommandQueue, library:MTLLibrary? = nil, values:[T], initialUniforms:Uniforms, kernalName:String, size:CGSize? = nil, pixelFormat:MTLPixelFormat = .bgra8Unorm,renderTarget:Bool = false,updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil) throws   {
+        self.updateUniforms = updateUniforms
         self.library = library ?? commandQueue.device.makeDefaultLibrary()!
         self.device = commandQueue.device
         self.commandQueue = commandQueue
@@ -75,6 +76,7 @@ public final class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
 
         print("compute render \(kernalName)")
        
+        uniforms.uniforms = updateUniforms?(uniforms.uniforms,t,dt) ?? uniforms.uniforms
         uniforms.updateUniforms()
         
         let input_texture = input?.render(commandBuffer: commandBuffer,t:t,dt:dt)

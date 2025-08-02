@@ -30,7 +30,10 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
     public var bufferProvider1:BufferProvider?
     public var bufferProvider2:BufferProvider?
     
-    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary,input:MTLTexture, initialValue:Uniforms, kernalName:String, size:CGSize? = nil, renderTarget:Bool = false)   {
+    var updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil
+    
+    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary,input:MTLTexture, initialValue:Uniforms, kernalName:String, size:CGSize? = nil, renderTarget:Bool = false,updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil)   {
+        self.updateUniforms = updateUniforms
         pixelFormat = input.pixelFormat
         self.library = library
         self.device = commandQueue.device
@@ -73,6 +76,7 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
         print("compute render \(kernalName)")
         guard width > 0, height > 0 else { print("size zero!!"); return nil }
         
+        uniforms.uniforms = updateUniforms?(uniforms.uniforms,t,dt) ?? uniforms.uniforms
         uniforms.updateUniforms()
             
         let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1);

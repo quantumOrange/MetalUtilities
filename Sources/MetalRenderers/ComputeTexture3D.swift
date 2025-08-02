@@ -25,6 +25,7 @@ public final class ComputeTexture3D<Uniforms>: TextureProvider,TextureMaker {
     let height:Int
     let depth:Int
     
+    var updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil
     
     
     //var renderTarget:Bool
@@ -40,8 +41,8 @@ public final class ComputeTexture3D<Uniforms>: TextureProvider,TextureMaker {
     public var bufferProvider1:BufferProvider?
     public var bufferProvider2:BufferProvider?
     
-    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary,  initialValue:Uniforms, kernalName:String, width:Int,height:Int,depth:Int, pixelFormat:MTLPixelFormat,renderTarget:Bool = false)   {
-       
+    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary,  initialValue:Uniforms, kernalName:String, width:Int,height:Int,depth:Int, pixelFormat:MTLPixelFormat,renderTarget:Bool = false,updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil)  {
+        self.updateUniforms = updateUniforms
         self.library = library
         self.device = commandQueue.device
         self.commandQueue = commandQueue
@@ -83,6 +84,7 @@ public final class ComputeTexture3D<Uniforms>: TextureProvider,TextureMaker {
         print("compute render \(kernalName)")
         guard width > 0, height > 0 else { print("size zero!!"); return nil }
         
+        uniforms.uniforms = updateUniforms?(uniforms.uniforms,t,dt) ?? uniforms.uniforms
         uniforms.updateUniforms()
             
         let input_texture = input?.render(commandBuffer: commandBuffer,t:t,dt:dt) 

@@ -10,6 +10,10 @@ import Metal
 
 let maxBuffersInFlight = 3
 
+protocol TimeUniforms {
+    var time:Float { get set }
+}
+
 public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
     
     public let pixelFormat:MTLPixelFormat = .bgra8Unorm
@@ -33,9 +37,12 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
     public var bufferProvider1:BufferProvider?
     public var bufferProvider2:BufferProvider?
     
-    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary,  initialValue:Uniforms, kernalName:String, size:CGSize? = nil, pixelFormat:MTLPixelFormat,renderTarget:Bool = false)   {
-       
-        self.library = library
+    var updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil
+    var uniforms: UniformsBuffer<Uniforms>
+    
+    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary? = nil,  initialValue:Uniforms, kernalName:String, size:CGSize? = nil, pixelFormat:MTLPixelFormat,renderTarget:Bool = false,updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil)   {
+        self.updateUniforms = updateUniforms
+        self.library = library ?? commandQueue.device.makeDefaultLibrary()!
         self.device = commandQueue.device
         self.commandQueue = commandQueue
         self.renderTarget = renderTarget
@@ -59,8 +66,8 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
     public func update(uniforms value:Uniforms) {
         uniforms.uniforms = value
     }
-
-    var uniforms: UniformsBuffer<Uniforms>
+    
+   
    
     public func render(commandBuffer:MTLCommandBuffer,t:Float,dt:Float) -> MTLTexture? {
         guard let target_texture else { return nil }
@@ -71,6 +78,7 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
         print("compute render \(kernalName)")
         guard width > 0, height > 0 else { print("size zero!!"); return nil }
         
+        uniforms.uniforms = updateUniforms?(uniforms.uniforms,t,dt) ?? uniforms.uniforms
         uniforms.updateUniforms()
             
         let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1);

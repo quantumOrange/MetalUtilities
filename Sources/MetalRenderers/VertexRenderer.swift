@@ -40,7 +40,10 @@ public final class VertexRenderer<Uniforms, Vertex:VertexDescribable> : TextureP
     var textureDestination3:TextureDestination = .fragmentOnly
     var textureDestination4:TextureDestination = .fragmentOnly
     
-    public init( commandQueue:MTLCommandQueue, library:MTLLibrary,  vertexBuffer: VertexBuffer,initialUniforms:Uniforms , vertex:String, fragment:String, size:CGSize? = nil,name:String? = nil, pixelFormat:MTLPixelFormat = .bgra8Unorm, enableBlending:Bool = false) throws {
+    var updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil
+    
+    public init( commandQueue:MTLCommandQueue, library:MTLLibrary,  vertexBuffer: VertexBuffer,initialUniforms:Uniforms , vertex:String, fragment:String, size:CGSize? = nil,name:String? = nil, pixelFormat:MTLPixelFormat = .bgra8Unorm, enableBlending:Bool = false,updateUniforms:((Uniforms,Float,Float) -> Uniforms)? = nil) throws {
+        self.updateUniforms = updateUniforms
         self.commandQueue = commandQueue
         self.device = commandQueue.device
         self.pixelFormat = pixelFormat
@@ -60,8 +63,9 @@ public final class VertexRenderer<Uniforms, Vertex:VertexDescribable> : TextureP
     }
     
     public func render(commandBuffer: any MTLCommandBuffer,t:Float,dt:Float) -> (any MTLTexture)? {
+        uniforms.uniforms = updateUniforms?(uniforms.uniforms,t,dt) ?? uniforms.uniforms
         uniforms.updateUniforms()
-        guard let vertexBuffer =  vertexBufferProvider.update(commandBuffer: commandBuffer,t:t,dt:dt) 
+        guard let vertexBuffer =  vertexBufferProvider.update(commandBuffer: commandBuffer,t:t,dt:dt)
         else { return nil}
         
         let input_texture0 = input0?.render(commandBuffer: commandBuffer,t:t,dt:dt)
