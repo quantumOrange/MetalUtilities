@@ -9,6 +9,10 @@ import Foundation
 
 
 public final class ComputeTexture3D<Uniforms>: TextureProvider,TextureMaker {
+    public func drawableSizeWillChange(_ size: CGSize) {
+        
+    }
+    
     
     public let pixelFormat:MTLPixelFormat = .bgra8Unorm
     public let device:MTLDevice
@@ -20,6 +24,8 @@ public final class ComputeTexture3D<Uniforms>: TextureProvider,TextureMaker {
     let width:Int
     let height:Int
     let depth:Int
+    
+    
     
     //var renderTarget:Bool
    
@@ -34,19 +40,24 @@ public final class ComputeTexture3D<Uniforms>: TextureProvider,TextureMaker {
     public var bufferProvider1:BufferProvider?
     public var bufferProvider2:BufferProvider?
     
-    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary,  initialValue:Uniforms, kernalName:String, size:CGSize? = nil, pixelFormat:MTLPixelFormat,renderTarget:Bool = false)   {
+    public init?(commandQueue:MTLCommandQueue, library:MTLLibrary,  initialValue:Uniforms, kernalName:String, width:Int,height:Int,depth:Int, pixelFormat:MTLPixelFormat,renderTarget:Bool = false)   {
        
         self.library = library
         self.device = commandQueue.device
         self.commandQueue = commandQueue
-        self.renderTarget = renderTarget
+
+        self.width = width
+        self.height = height
+        self.depth = depth
         
         self.uniforms = UniformsBuffer(device:commandQueue.device, initialValue: initialValue)
         self.kernalName = kernalName
         try? createPipelines(device:commandQueue.device,kernalName:kernalName)
-        if let size {
-            createTarget(size:size)
-        }
+        
+        createTarget()
+       // if let size {
+       //     createTarget(size:size)
+       // }
     }
     
     func createPipelines(device:MTLDevice,kernalName:String) throws {
@@ -79,8 +90,8 @@ public final class ComputeTexture3D<Uniforms>: TextureProvider,TextureMaker {
         let input_texture3 = input3?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         let input_texture4 = input4?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         
-        let buffer1 = bufferProvider1?.update(commandBuffer: commandBuffer)
-        let buffer2 = bufferProvider2?.update(commandBuffer: commandBuffer)
+        let buffer1 = bufferProvider1?.update(commandBuffer: commandBuffer,t:t,dt:dt)
+        let buffer2 = bufferProvider2?.update(commandBuffer: commandBuffer,t:t,dt:dt)
       
         let computeEncoder = commandBuffer.makeComputeCommandEncoder()!
         
@@ -123,7 +134,7 @@ public final class ComputeTexture3D<Uniforms>: TextureProvider,TextureMaker {
     }
     
     public func createTarget() {
-        target_texture = makeTexture3d(width:width, height: height, depth:depth ,lable: "Target \(kernalName.capitalized)",renderTarget: renderTarget)
+        target_texture = makeTexture3d(width:width, height: height, depth:depth)
     }
 }
 

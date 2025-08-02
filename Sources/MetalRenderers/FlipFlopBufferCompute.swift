@@ -11,7 +11,6 @@ import Metal
 
 public final class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
     
-    
     public var buffer: (any MTLBuffer)? { outputBuffer }
     
     
@@ -71,17 +70,12 @@ public final class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
         computePipeline =  try device.makeComputePipelineState(descriptor: computeDescriptor, options: MTLPipelineOption(rawValue: 0), reflection: nil)
     }
 
-    public func update(commandBuffer: any MTLCommandBuffer) -> MTLBuffer? {
+    public func update(commandBuffer: any MTLCommandBuffer,t:Float,dt:Float) -> MTLBuffer? {
         swap(&inputBuffer,&outputBuffer)
-        
-        //let width = Int(size.width)
-        //let height = Int(size.height)
+
         print("compute render \(kernalName)")
        
-        
         uniforms.updateUniforms()
-        
-        
         
         let input_texture = input?.render(commandBuffer: commandBuffer,t:t,dt:dt)
         let input_texture2 = input2?.render(commandBuffer: commandBuffer,t:t,dt:dt)

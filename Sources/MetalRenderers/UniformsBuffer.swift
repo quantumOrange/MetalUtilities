@@ -18,11 +18,7 @@ final class UniformsBuffer<Uniforms> {
     var uniformBufferIndex = 0
     var uniformsPointer: UnsafeMutablePointer<Uniforms>
     
-    public var uniforms: Uniforms {
-        didSet {
-            print("set uniforms")
-        }
-    }
+    public var uniforms: Uniforms
 
     public init(device:MTLDevice, initialValue:Uniforms, name:String = "")  {
 
@@ -41,6 +37,8 @@ final class UniformsBuffer<Uniforms> {
     
     func updateUniforms() {
         updateDynamicBufferState()
+        
+        
         uniformsPointer.pointee = uniforms
     }
    

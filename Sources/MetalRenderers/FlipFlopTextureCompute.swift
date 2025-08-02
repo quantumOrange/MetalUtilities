@@ -9,7 +9,7 @@ import Foundation
 import Metal
 
 public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMaker {
-    public let pixelFormat:MTLPixelFormat = .bgra8Unorm
+    public let pixelFormat:MTLPixelFormat
     public let device:MTLDevice
     let library:MTLLibrary
     var computePipeline:MTLComputePipelineState!
@@ -20,8 +20,8 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
     
     public var target_texture:MTLTexture? { input }
     
-    public var output:MTLTexture
-    public var input:MTLTexture
+    public var output:MTLTexture!
+    public var input:MTLTexture!
     
     public var input2:TextureProvider?
     public var input3:TextureProvider?
@@ -36,14 +36,15 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
         self.device = commandQueue.device
         self.commandQueue = commandQueue
         self.renderTarget = renderTarget
-        
+        self.input = input
         self.uniforms = UniformsBuffer(device:commandQueue.device, initialValue: initialValue)
         self.kernalName = kernalName
+        
         try? createPipelines(device:commandQueue.device,kernalName:kernalName)
-        self.input = input
         
-        self.output =  makeTexture(width:input.width, height: input.height,lable: "Target \(kernalName.capitalized)",renderTarget: renderTarget)
         
+        
+        self.output =  makeTexture(width:input.width, height: input.height,lable: "Target \(kernalName.capitalized)",renderTarget: renderTarget)!
     }
     
     func createPipelines(device:MTLDevice,kernalName:String) throws {
@@ -62,11 +63,11 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
    
     public func render(commandBuffer:MTLCommandBuffer,t:Float,dt:Float) -> MTLTexture? {
         defer {
-            swap(&target_texture,&input)
+            swap(&output,&input)
         }
        // guard let target_texture else { return nil }
-        let width = target_texture.width
-        let height = target_texture.height
+        let width = output.width
+        let height = output.height
         //let width = Int(size.width)
         //let height = Int(size.height)
         print("compute render \(kernalName)")
@@ -84,17 +85,15 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
         let input_texture3 = input3?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         let input_texture4 = input4?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         
-        let buffer1 = bufferProvider1?.update(commandBuffer: commandBuffer)
-        let buffer2 = bufferProvider2?.update(commandBuffer: commandBuffer)
+        let buffer1 = bufferProvider1?.update(commandBuffer: commandBuffer,t:t,dt:dt)
+        let buffer2 = bufferProvider2?.update(commandBuffer: commandBuffer,t:t,dt:dt)
       
         let computeEncoder = commandBuffer.makeComputeCommandEncoder()!
         
         computeEncoder.setBuffer(uniforms.uniformBuffer, offset: uniforms.uniformBufferOffset, index: 0)
-        computeEncoder.setTexture(target_texture, index: 0)
+        computeEncoder.setTexture(output, index: 0)
+        computeEncoder.setTexture(input, index: 1)
         
-        if let input_texture {
-            computeEncoder.setTexture(input_texture, index: 1)
-        }
         
         if let input_texture2 {
             computeEncoder.setTexture(input_texture2, index: 2)
@@ -120,14 +119,14 @@ public final class FlipFlopTextureCompute<Uniforms>: TextureProvider,TextureMake
         computeEncoder.setComputePipelineState(computePipeline)
         computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
         computeEncoder.endEncoding()
-        print("target text size:\(target_texture.width),\(target_texture.height)")
+        //print("target text size:\(target_texture.width),\(target_texture.height)")
         return target_texture
     }
     
     public func createTarget(size:CGSize) {
         let width = Int(size.width)
         let height = Int(size.height)
-        target_texture = makeTexture(width:width, height: height,lable: "Target \(kernalName.capitalized)",renderTarget: renderTarget)
+        output = makeTexture(width:width, height: height,lable: "Target \(kernalName.capitalized)",renderTarget: renderTarget)!
     }
     
     public func drawableSizeWillChange(_ size:CGSize) {

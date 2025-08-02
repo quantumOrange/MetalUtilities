@@ -61,7 +61,7 @@ public final class VertexRenderer<Uniforms, Vertex:VertexDescribable> : TextureP
     
     public func render(commandBuffer: any MTLCommandBuffer,t:Float,dt:Float) -> (any MTLTexture)? {
         uniforms.updateUniforms()
-        guard let vertexBuffer =  vertexBufferProvider.update(commandBuffer: commandBuffer)
+        guard let vertexBuffer =  vertexBufferProvider.update(commandBuffer: commandBuffer,t:t,dt:dt) 
         else { return nil}
         
         let input_texture0 = input0?.render(commandBuffer: commandBuffer,t:t,dt:dt)

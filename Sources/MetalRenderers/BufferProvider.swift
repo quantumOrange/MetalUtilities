@@ -10,7 +10,7 @@ import Metal
 import MetalKit
 
 public protocol BufferProvider {
-    func update(commandBuffer:MTLCommandBuffer) -> MTLBuffer?
+    func update(commandBuffer:MTLCommandBuffer, t:Float,dt:Float) -> MTLBuffer?
     var  buffer:MTLBuffer? { get }
 }
 
@@ -27,7 +27,7 @@ public final class ConstantBuffer<T> : VertexBuffer {
     public var type:MTLPrimitiveType   = .point
     
     
-    public func update(commandBuffer: any MTLCommandBuffer) -> MTLBuffer? {
+    public func update(commandBuffer: any MTLCommandBuffer,t:Float,dt:Float) -> MTLBuffer? {
         guard let buffer = self.buffer else { return nil }
         return buffer
     }
@@ -56,7 +56,7 @@ public final class UpdatableBuffer<T> : BufferProvider {
     public var buffers: [MTLBuffer] = []
     public var buffer:MTLBuffer? { self.buffers[bufferIndex] }
     
-    public func update(commandBuffer: any MTLCommandBuffer) -> MTLBuffer? {
+    public func update(commandBuffer: any MTLCommandBuffer,t:Float,dt:Float) -> MTLBuffer? {
         updateDynamicBufferState()
         return self.buffers[bufferIndex] 
     }
