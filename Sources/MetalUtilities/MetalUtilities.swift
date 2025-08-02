@@ -1,6 +1,8 @@
 
 import simd
 
+@_exported import MetalRenderers
+@_exported import MetalUI
 
 public func matrix4x4(quaternions q:simd_quatd) -> matrix_float4x4 {
     matrix4x4(matrix_double3x3(q))
