@@ -13,8 +13,8 @@ enum TextureErrors : Error {
     case cannotFindURL
 }
 extension MTKTextureLoader {
-    public func loadFromBundle(name:String)  throws -> MTLTexture {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "png") else {
+    public func loadFromBundle(name:String,ext:String = "png")  throws -> MTLTexture {
+        guard let url = Bundle.main.url(forResource: name, withExtension: ext) else {
             throw TextureErrors.cannotFindURL
         }
        
