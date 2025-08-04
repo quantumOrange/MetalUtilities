@@ -21,7 +21,10 @@ public final class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
     let commandQueue: MTLCommandQueue
     let kernalName:String
     
-    let count:Int
+    public let count:Int
+    public let start: Int = 0
+    public var type: MTLPrimitiveType = .point
+    
     var renderTarget:Bool
 
     public var input:TextureProvider?
@@ -119,5 +122,8 @@ public final class FlipFlopBufferCompute<Uniforms,T> : BufferProvider {
         
         return outputBuffer
     }
+    
+}
+extension FlipFlopBufferCompute : VertexBuffer {
     
 }
