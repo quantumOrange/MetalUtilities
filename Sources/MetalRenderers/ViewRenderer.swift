@@ -133,6 +133,7 @@ public final class ViewRenderer:NSObject,MTKViewDelegate {
     public func draw(in view: MTKView) {
         let t = currentTime
         let dt = t - lastRenderTime
+        lastRenderTime = currentTime
         guard !pauseRenderering else { return }
         delagate?.update()
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
