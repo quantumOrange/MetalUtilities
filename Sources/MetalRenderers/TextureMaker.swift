@@ -54,7 +54,7 @@ public extension TextureMaker {
         return tex
     }
     
-    func makeTexture3d(width:Int,height:Int,maxDepth depth:Int) -> (Int,MTLTexture?) {
+    func flexibleMakeTexture3d(width:Int,height:Int,maxDepth depth:Int) -> (Int,MTLTexture?) {
         let maxTexDimension = 2048
         
         var w = width
