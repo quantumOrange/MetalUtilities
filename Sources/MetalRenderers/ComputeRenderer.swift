@@ -140,6 +140,12 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
     public func drawableSizeWillChange(_ size:CGSize) {
         createTarget(size:size)
     }
+    
+    public func printUniforms() {
+        print(uniforms.uniforms)
+    }
+         
+    
 }
 
 
