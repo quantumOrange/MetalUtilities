@@ -75,7 +75,7 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
         let height = target_texture.height
         //let width = Int(size.width)
         //let height = Int(size.height)
-        print("compute render \(kernalName)")
+     //   print("compute render \(kernalName)")
         guard width > 0, height > 0 else { print("size zero!!"); return nil }
         
         uniforms.uniforms = updateUniforms?(uniforms.uniforms,t,dt) ?? uniforms.uniforms
@@ -86,8 +86,11 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
                                    height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
                                    depth: 1);
         
-        let input_texture = input?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
-        let input_texture2 = input2?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
+        let input_texture = input?.render(commandBuffer: commandBuffer,t:t,dt:dt)
+        if let input_texture {
+            assert(input_texture is MTLTexture)
+        }
+        let input_texture2 = input2?.render(commandBuffer: commandBuffer,t:t,dt:dt)
         let input_texture3 = input3?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         let input_texture4 = input4?.render(commandBuffer: commandBuffer,t:t,dt:dt) 
         
@@ -98,8 +101,9 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
         
         computeEncoder.setBuffer(uniforms.uniformBuffer, offset: uniforms.uniformBufferOffset, index: 0)
         computeEncoder.setTexture(target_texture, index: 0)
-        
+    
         if let input_texture {
+            
             computeEncoder.setTexture(input_texture, index: 1)
         }
         
@@ -129,6 +133,10 @@ public final class ComputeRenderer<Uniforms>: TextureProvider,TextureMaker {
         computeEncoder.endEncoding()
        // print("target text size:\(target_texture.width),\(target_texture.height)")
         return target_texture
+    }
+    
+    public func createTargetIfNeeded(size:CGSize) {
+        target_texture?.width == Int(size.width) && target_texture?.height == Int(size.height) ? () : createTarget(size: size)
     }
     
     public func createTarget(size:CGSize) {
